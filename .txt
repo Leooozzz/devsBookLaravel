@@ -1,0 +1,26 @@
+API PHP
+
+ENDPOINTS
+
+post /api/auth/login (email, password)
+
+post /api/auth/logout
+post /api/auth/refresh
+
+post /api/user(name,email,birthday,password)
+put /api/user(name,email,birthday,password,password,city,work)
+get /api/user
+get /api/user/:id
+
+post /api/user/avatar (avatar)
+post /api/user/cover (cover)
+
+get /api/feed (page)
+get /api/user/feed (page)
+get /api/user/:id/feed (page)
+
+post/api/feed (type=text/photo,body,photo)
+post /api/post/:id/like
+post /api/post/:id/comment (txt)
+
+get /api/search (query)
