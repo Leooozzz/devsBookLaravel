@@ -83,7 +83,8 @@ class UserController extends Controller
                 'birthday',
                 'city',
                 'work',
-                'avatar'
+                'avatar',
+                'cover'
             ])
         ], 200);
     }
@@ -123,10 +124,50 @@ class UserController extends Controller
                 'birthday',
                 'city',
                 'work',
-                'avatar'
+                'avatar' => $user->cover ? asset('/media/avatars/' . $user->avatar) : null,
+                'cover' => $user->cover ? asset('/media/covers/' . $user->cover) : null
             ])
         ], 200);
     }
 
-    public function updateCover(Request $request) {}
+    public function updateCover(Request $request)
+    {
+        $user = User::find($this->loggedUser['id']);
+
+        $allowedTypes = ['image/jpg', 'image/jpeg', 'image/png'];
+
+        $image = $request->file('cover');
+
+        if ($image) {
+            if (in_array($image->getClientMimeType(), $allowedTypes)) {
+                $filename = md5(time() . rand(0, 9999)) . '.jpg';
+                $destPath = public_path('/media/covers');
+
+                $img = Image::make($image->path())->fit(850, 310)->save($destPath . '/' . $filename);
+                $user->cover = $filename;
+                $user->save();
+            } else {
+                return response()->json([
+                    'error' => 'Invalid or missing file'
+                ], 400);
+            }
+        } else {
+            return response()->json([
+                'error' => 'Invalid or missing file'
+            ], 400);
+        }
+        return response()->json([
+            'sucess' => true,
+            'user' => $user->only([
+                'id',
+                'name',
+                'email',
+                'birthday',
+                'city',
+                'work',
+                'avatar' => $user->cover ? asset('/media/avatars/' . $user->cover) : null,
+                'cover' => $user->cover ? asset('/media/covers/' . $user->cover) : null
+            ])
+        ], 200);
+    }
 }
