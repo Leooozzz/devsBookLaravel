@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FeedController;
+use App\Http\Controllers\PostController;
+use App\Http\Controllers\SearchController;
 use App\Http\Controllers\UserController;
 
 Route::post('/user', [AuthController::class, 'create']);
@@ -28,20 +30,19 @@ Route::post('/user/cover', [UserController::class, 'updateCover']);
 Route::get('/feed', [FeedController::class, 'read']);
 
 
-/*
-Route::get('/user/feed', 'FeedController@userFeed');
-Route::get('/user/{id}/feed', 'FeedController@userFeed');
+Route::get('/user/feed', [FeedController::class, 'userFeed']);
+Route::get('/user/{id}/feed', [FeedController::class, 'userFeed']);
 
-Route::get('/user', 'UserController@read');
-Route::get('/user/:{id}', 'UserController@read');
 
-*/
+Route::get('/user', [UserController::class, 'read']);
+Route::get('/user/:{id}', [UserController::class, 'read']);
+
 
 Route::post('/feed', [FeedController::class, 'create']);
 
-/*
-Route::post('/post/:{id}/like', 'PostController@like');
-Route::post('/post/:{id}/commemnt', 'PostController@comment');
 
-Route::get('/search', 'SearchController@search');
-*/
+Route::post('/post/:{id}/like', [PostController::class, 'like']);
+Route::post('/post/:{id}/commemnt', [PostController::class, 'comment']);
+
+
+Route::get('/search', [SearchController::class, 'search']);

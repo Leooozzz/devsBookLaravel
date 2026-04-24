@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Post;
 use App\Models\User;
+use App\Models\UserRelation;
+use DateTime;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use Intervention\Image\Facades\Image;
@@ -168,6 +171,46 @@ class UserController extends Controller
                 'avatar' => $user->cover ? asset('/media/avatars/' . $user->cover) : null,
                 'cover' => $user->cover ? asset('/media/covers/' . $user->cover) : null
             ])
+        ], 200);
+    }
+
+    public function read($id = false)
+    {
+        if ($id) {
+            $info = User::find($id);
+            if (!$info) {
+                return response()->json([
+                    'error' => 'User not exist'
+                ], 400);
+            }
+        } else {
+            $info = $this->loggedUser;
+        }
+        $dateFrom = new \DateTime($info['birthday']);
+        $dateTo = new  \DateTime();
+        $info['age'] = $dateFrom->diff($dateTo)->y;
+
+        $followers = UserRelation::where('user_to', $info->id)->count();
+        $following = UserRelation::where('user_from', $info->id)->count();
+
+        $photos = Post::where('id_user',$info->id)->where('type','photo')->count();
+
+        return response()->json([
+            'sucess' => true,
+            'user' => [
+                'id' => $info->id,
+                'name' => $info->name,
+                'email' => $info->email,
+                'birthday' => $info->birthday,
+                'city' => $info->city,
+                'work' => $info->work,
+                'age' => $info->age,
+                'followers' => $followers,
+                'following' => $following,
+                'photo' => $photos,
+                'avatar' => $info->avatar ? asset('/media/avatars/' . $info->avatar) : null,
+                'cover' => $info->cover ? asset('/media/covers/' . $info->cover) : null,
+            ]
         ], 200);
     }
 }

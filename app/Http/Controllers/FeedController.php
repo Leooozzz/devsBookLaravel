@@ -115,43 +115,68 @@ class FeedController extends Controller
         return response()->json([
             'sucess' => true,
             'posts' => $posts,
-            'currentPage' =>$page,
+            'currentPage' => $page,
+            'pageCount' => ceil($pageCount)
+        ], 200);
+    }
+    public function userFeed(Request $request, $id = false)
+    {
+
+        if ($id == false) {
+            $id = $this->loggedUser['id'];
+        }
+        $page = intval($request->input('page'));
+        $perPage = 10;
+
+
+
+        $postList = Post::whereIn('id_user', $id)->orderBy('created_at', 'desc')->offset($page * $perPage)->limit($perPage)->get();
+
+        $total = Post::whereIn('id_user', $id)->count();
+
+        $pageCount = ($total / $perPage);
+        $posts = $this->_postListToObject($postList, $this->loggedUser['id']);
+
+        return response()->json([
+            'sucess' => true,
+            'posts' => $posts,
+            'currentPage' => $page,
             'pageCount' => ceil($pageCount)
         ], 200);
     }
     private function _postListToObject($postList, $idUser)
-{
-    foreach ($postList as $postKey => $postItem) {
+    {
+        foreach ($postList as $postKey => $postItem) {
 
-        $postList[$postKey]['mine'] = ($postItem['id_user'] === $idUser);
+            $postList[$postKey]['mine'] = ($postItem['id_user'] === $idUser);
 
-        $userInfo = User::find($postItem['id_user']);
-        $userInfo['cover'] = url('/media/covers/' . $userInfo['cover']);
-        $userInfo['avatar'] = url('/media/avatars/' . $userInfo['avatar']);
-        $postList[$postKey]['user'] = $userInfo;
+            $userInfo = User::find($postItem['id_user']);
+            $userInfo['cover'] = url('/media/covers/' . $userInfo['cover']);
+            $userInfo['avatar'] = url('/media/avatars/' . $userInfo['avatar']);
+            $postList[$postKey]['user'] = $userInfo;
 
-        $likes = PostLike::where('id_post', $postItem['id'])->count();
-        $postList[$postKey]['likeCount'] = $likes;
+            $likes = PostLike::where('id_post', $postItem['id'])->count();
+            $postList[$postKey]['likeCount'] = $likes;
 
-        $isLiked = PostLike::where('id_post', $postItem['id'])
-            ->where('id_user', $idUser)
-            ->count();
+            $isLiked = PostLike::where('id_post', $postItem['id'])
+                ->where('id_user', $idUser)
+                ->count();
 
-        $postList[$postKey]['liked'] = ($isLiked > 0);
+            $postList[$postKey]['liked'] = ($isLiked > 0);
 
-        $comments = PostComment::where('id_post', $postItem['id'])->get();
+            $comments = PostComment::where('id_post', $postItem['id'])->get();
 
-        foreach ($comments as $commentKey => $comment) {
-            $user = User::find($comment['id_user']);
-            $user['cover'] = url('/media/covers/' . $user['cover']);
-            $user['avatar'] = url('/media/avatars/' . $user['avatar']);
+            foreach ($comments as $commentKey => $comment) {
+                $user = User::find($comment['id_user']);
+                $user['cover'] = url('/media/covers/' . $user['cover']);
+                $user['avatar'] = url('/media/avatars/' . $user['avatar']);
 
-            $comments[$commentKey]['user'] = $user;
+                $comments[$commentKey]['user'] = $user;
+            }
+
+            $postList[$postKey]['comments'] = $comments;
         }
 
-        $postList[$postKey]['comments'] = $comments;
+        return $postList;
     }
-
-    return $postList;
-}
 }
